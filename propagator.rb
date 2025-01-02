@@ -1,12 +1,26 @@
 #! /usr/bin/env ruby
 #
-# Simple exploration in Ruby of a propagator network. Note that this example misses out
-# on logic programming style resolution and lacks backtracking.
+# Simple exploration in Ruby of a propagator network. The idea is to
+# get away from traditional linear-style computations.
 #
-# This first version creates a propnet as a DAG. Execution is via a simple round robin.
-# When inputs are complete the propagator runs and feeds it to the output.
+# Note that this example misses out on logic programming style
+# resolution and lacks backtracking. Also it ignores incremental
+# updating of cells and/or ranges. For a full implementation better
+# check Raduls original thesis on Propagation Networks and more recent
+# resources, including Sussman's book on "Software Design for
+# Flexibility: How to Avoid Programming Yourself into a Corner".  As
+# an example I particularly like Dave Thompson's alternative for
+# react-type frameworks:
 #
+#    https://dthompson.us/posts/functional-reactive-user-interfaces-with-propagators.html
 #
+# This first example in Ruby creates a propnet as a DAG. Execution is
+# via a simple round robin.  When inputs are complete the propagator
+# runs and feeds it to the output. When outputs are complete we are
+# done.  Note that it does not matter in what order we formulate the
+# computation and there there is no if-then logic for computation
+# paths. As state is contained in Cells it is perfectly viable to run
+# computations in parallel.
 
 class Cell
   attr_accessor :value
