@@ -30,7 +30,7 @@
 
 require 'ostruct'
 
-class EmptyCell < OpenStruct
+class Cell < OpenStruct
   def initialize
     super
     self.cell = :nothing
@@ -45,20 +45,20 @@ end
 
 # Runs the propagator when applicable and returns true on completion
 def run_propagator prop
-  return true if prop[:state] == :done
-  if prop[:state] == :waiting
+  return true if prop.state == :done
+  if prop.state == :waiting
     # Check inputs
-    prop[:inputs].each do | input |
+    prop.inputs.each do | input |
       p input.cell
       return false if input.cell == :nothing
     end
-    prop[:state] = :compute
+    prop.state = :compute
     false
   end
 
-  if prop[:state] == :compute
-    prop[:output].cell = prop[:propagator][:run].call(prop[:inputs],prop[:output])
-    prop[:state] = :done
+  if prop.state == :compute
+    prop.output.cell = prop.propagator.run.call(prop.inputs,prop.output)
+    prop.state = :done
     return true
   end
   false
@@ -73,7 +73,7 @@ def run_propnet pn
     # Try all propagators until they all return true
     pn.each do | propagator |
       try = try-1
-      result.push run_propagator propagator
+      result.push run_propagator(propagator)
       p [try, propagator]
     end
     p result
@@ -84,12 +84,12 @@ end
 # Create the propnet. Note that the order of creating cells and propagators should not matter!
 propnet = []
 
-a = EmptyCell.new
-b = EmptyCell.new
-c = EmptyCell.new
-d = EmptyCell.new
-e = EmptyCell.new
-f = EmptyCell.new
+a = Cell.new
+b = Cell.new
+c = Cell.new
+d = Cell.new
+e = Cell.new
+f = Cell.new
 
 p_plus = PropFunc.new( :func => :add, :run => lambda { |inputs, output| output.cell = inputs[0].cell + inputs[1].cell } )
 
@@ -97,7 +97,7 @@ propnet.append(SimplePropagator.new( :propagator => p_plus, :state => :waiting, 
 propnet.append(SimplePropagator.new( :propagator => p_plus, :state => :waiting, :inputs => [a,b], :output => c ))
 
 p_multiply = PropFunc.new( :propagator => :multi, :run => lambda { |inputs, output| output.cell = inputs[0].cell * inputs[1].cell } )
-propnet.append({ :propagator => p_multiply, :state => :waiting, :inputs => [e,d], :output => f} )
+propnet.append(SimplePropagator.new( :propagator => p_multiply, :state => :waiting, :inputs => [e,d], :output => f ))
 
 a.cell = 2
 b.cell = 3
