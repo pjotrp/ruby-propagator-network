@@ -9,6 +9,10 @@
 # sugar, e.g. a[:cell] becomes a.cell. The downside is some more
 # openstruct noise in the debugging output.
 #
+# I saw too late that Ruby now has a Struct that replaces my use of
+# OpenStruct (no longer recommended). The syntax is close. I am too
+# lazy to care, but if anyone wants to fix it, send a patch.
+#
 # Note that this example misses out on logic programming style
 # resolution and lacks backtracking. Also it ignores incremental
 # updating of cells and/or ranges. For a full implementation better
