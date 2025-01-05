@@ -5,7 +5,7 @@
 #
 # In this edition we want to write the simple example in propagator.rb
 # in a more functional programming (NP) style, by getting rid of the
-# classes and introducing lambda.
+# classes and introducing lambda. It leads to a shorter program.
 #
 # Note that this example misses out on logic programming style
 # resolution and lacks backtracking. Also it ignores incremental
@@ -98,29 +98,24 @@ p f[:cell]
 
 Resulting in:
 
-gaeta:~/iwrk/opensource/ruby/propagator$ ./propagator.rb
-#<P_Plus:0x00007fccf9117948 @state=:waiting, @inputs=[#<Cell:0x00007fccf9117fd8 @value=:nothing>, #<Cell:0x00007fccf9117f88 @value=5>], @output=#<Cell:0x00007fccf9117bf0 @value=:nothing>>
+ ./propagator2.rb
 :nothing
-[9, #<P_Plus:0x00007fccf9117948 @state=:waiting, @inputs=[#<Cell:0x00007fccf9117fd8 @value=:nothing>, #<Cell:0x00007fccf9117f88 @value=5>], @output=#<Cell:0x00007fccf9117bf0 @value=:nothing>>]
-#<P_Plus:0x00007fccf91175b0 @state=:waiting, @inputs=[#<Cell:0x00007fccf9110080 @value=2>, #<Cell:0x00007fccf9110008 @value=3>], @output=#<Cell:0x00007fccf9117fd8 @value=:nothing>>
+[9, {:propagator=>{:func=>:add, :run=>#<Proc:0x00007f3355dde3b8 ./propagator2.rb:77 (lambda)>}, :state=>:waiting, :inputs=>[{:cell=>:nothing}, {:cell=>5}], :output=>{:cell=>:nothing}}]
 2
 3
-[8, #<P_Plus:0x00007fccf91175b0 @state=:done, @inputs=[#<Cell:0x00007fccf9110080 @value=2>, #<Cell:0x00007fccf9110008 @value=3>], @output=#<Cell:0x00007fccf9117fd8 @value=5>>]
-#<P_Multiply:0x00007fccf9117448 @state=:waiting, @inputs=[#<Cell:0x00007fccf9117bf0 @value=:nothing>, #<Cell:0x00007fccf9117f88 @value=5>], @output=#<Cell:0x00007fccf9117b00 @value=:nothing>>
+[8, {:propagator=>{:func=>:add, :run=>#<Proc:0x00007f3355dde3b8 ./propagator2.rb:77 (lambda)>}, :state=>:done, :inputs=>[{:cell=>2}, {:cell=>3}], :output=>{:cell=>5}}]
 :nothing
-[7, #<P_Multiply:0x00007fccf9117448 @state=:waiting, @inputs=[#<Cell:0x00007fccf9117bf0 @value=:nothing>, #<Cell:0x00007fccf9117f88 @value=5>], @output=#<Cell:0x00007fccf9117b00 @value=:nothing>>]
+[7, {:propagator=>{:propagator=>:multi, :run=>#<Proc:0x00007f3355dde228 ./propagator2.rb:82 (lambda)>}, :state=>:waiting, :inputs=>[{:cell=>:nothing}, {:cell=>5}], :output=>{:cell=>:nothing}}]
 [false, true, false]
-#<P_Plus:0x00007fccf9117948 @state=:waiting, @inputs=[#<Cell:0x00007fccf9117fd8 @value=5>, #<Cell:0x00007fccf9117f88 @value=5>], @output=#<Cell:0x00007fccf9117bf0 @value=:nothing>>
 5
 5
-[6, #<P_Plus:0x00007fccf9117948 @state=:done, @inputs=[#<Cell:0x00007fccf9117fd8 @value=5>, #<Cell:0x00007fccf9117f88 @value=5>], @output=#<Cell:0x00007fccf9117bf0 @value=10>>]
-[5, #<P_Plus:0x00007fccf91175b0 @state=:done, @inputs=[#<Cell:0x00007fccf9110080 @value=2>, #<Cell:0x00007fccf9110008 @value=3>], @output=#<Cell:0x00007fccf9117fd8 @value=5>>]
-#<P_Multiply:0x00007fccf9117448 @state=:waiting, @inputs=[#<Cell:0x00007fccf9117bf0 @value=10>, #<Cell:0x00007fccf9117f88 @value=5>], @output=#<Cell:0x00007fccf9117b00 @value=:nothing>>
+[6, {:propagator=>{:func=>:add, :run=>#<Proc:0x00007f3355dde3b8 ./propagator2.rb:77 (lambda)>}, :state=>:done, :inputs=>[{:cell=>5}, {:cell=>5}], :output=>{:cell=>10}}]
+[5, {:propagator=>{:func=>:add, :run=>#<Proc:0x00007f3355dde3b8 ./propagator2.rb:77 (lambda)>}, :state=>:done, :inputs=>[{:cell=>2}, {:cell=>3}], :output=>{:cell=>5}}]
 10
 5
-[4, #<P_Multiply:0x00007fccf9117448 @state=:done, @inputs=[#<Cell:0x00007fccf9117bf0 @value=10>, #<Cell:0x00007fccf9117f88 @value=5>], @output=#<Cell:0x00007fccf9117b00 @value=50>>]
+[4, {:propagator=>{:propagator=>:multi, :run=>#<Proc:0x00007f3355dde228 ./propagator2.rb:82 (lambda)>}, :state=>:done, :inputs=>[{:cell=>10}, {:cell=>5}], :output=>{:cell=>50}}]
 [true, true, true]
-[#<P_Plus:0x00007fccf9117948 @state=:done, @inputs=[#<Cell:0x00007fccf9117fd8 @value=5>, #<Cell:0x00007fccf9117f88 @value=5>], @output=#<Cell:0x00007fccf9117bf0 @value=10>>, #<P_Plus:0x00007fccf91175b0 @state=:done, @inputs=[#<Cell:0x00007fccf9110080 @value=2>, #<Cell:0x00007fccf9110008 @value=3>], @output=#<Cell:0x00007fccf9117fd8 @value=5>>, #<P_Multiply:0x00007fccf9117448 @state=:done, @inputs=[#<Cell:0x00007fccf9117bf0 @value=10>, #<Cell:0x00007fccf9117f88 @value=5>], @output=#<Cell:0x00007fccf9117b00 @value=50>>]
+[{:propagator=>{:func=>:add, :run=>#<Proc:0x00007f3355dde3b8 ./propagator2.rb:77 (lambda)>}, :state=>:done, :inputs=>[{:cell=>5}, {:cell=>5}], :output=>{:cell=>10}}, {:propagator=>{:func=>:add, :run=>#<Proc:0x00007f3355dde3b8 ./propagator2.rb:77 (lambda)>}, :state=>:done, :inputs=>[{:cell=>2}, {:cell=>3}], :output=>{:cell=>5}}, {:propagator=>{:propagator=>:multi, :run=>#<Proc:0x00007f3355dde228 ./propagator2.rb:82 (lambda)>}, :state=>:done, :inputs=>[{:cell=>10}, {:cell=>5}], :output=>{:cell=>50}}]
 5
 10
 50
