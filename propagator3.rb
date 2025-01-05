@@ -115,24 +115,24 @@ p f.cell
 
 Resulting in:
 
- ./propagator2.rb
+./propagator3.rb
 :nothing
-[9, {:propagator=>{:func=>:add, :run=>#<Proc:0x00007f3355dde3b8 ./propagator2.rb:77 (lambda)>}, :state=>:waiting, :inputs=>[{:cell=>:nothing}, {:cell=>5}], :output=>{:cell=>:nothing}}]
+[9, #<SimplePropagator propagator=#<PropFunc func=:add, run=#<Proc:0x00007fe2521ca778 ./propagator3.rb:94 (lambda)>>, state=:waiting, inputs=[#<Cell cell=:nothing>, #<Cell cell=5>], output=#<Cell cell=:nothing>>]
 2
 3
-[8, {:propagator=>{:func=>:add, :run=>#<Proc:0x00007f3355dde3b8 ./propagator2.rb:77 (lambda)>}, :state=>:done, :inputs=>[{:cell=>2}, {:cell=>3}], :output=>{:cell=>5}}]
+[8, #<SimplePropagator propagator=#<PropFunc func=:add, run=#<Proc:0x00007fe2521ca778 ./propagator3.rb:94 (lambda)>>, state=:done, inputs=[#<Cell cell=2>, #<Cell cell=3>], output=#<Cell cell=5>>]
 :nothing
-[7, {:propagator=>{:propagator=>:multi, :run=>#<Proc:0x00007f3355dde228 ./propagator2.rb:82 (lambda)>}, :state=>:waiting, :inputs=>[{:cell=>:nothing}, {:cell=>5}], :output=>{:cell=>:nothing}}]
+[7, #<SimplePropagator propagator=#<PropFunc propagator=:multi, run=#<Proc:0x00007fe2521cde78 ./propagator3.rb:99 (lambda)>>, state=:waiting, inputs=[#<Cell cell=:nothing>, #<Cell cell=5>], output=#<Cell cell=:nothing>>]
 [false, true, false]
 5
 5
-[6, {:propagator=>{:func=>:add, :run=>#<Proc:0x00007f3355dde3b8 ./propagator2.rb:77 (lambda)>}, :state=>:done, :inputs=>[{:cell=>5}, {:cell=>5}], :output=>{:cell=>10}}]
-[5, {:propagator=>{:func=>:add, :run=>#<Proc:0x00007f3355dde3b8 ./propagator2.rb:77 (lambda)>}, :state=>:done, :inputs=>[{:cell=>2}, {:cell=>3}], :output=>{:cell=>5}}]
+[6, #<SimplePropagator propagator=#<PropFunc func=:add, run=#<Proc:0x00007fe2521ca778 ./propagator3.rb:94 (lambda)>>, state=:done, inputs=[#<Cell cell=5>, #<Cell cell=5>], output=#<Cell cell=10>>]
+[5, #<SimplePropagator propagator=#<PropFunc func=:add, run=#<Proc:0x00007fe2521ca778 ./propagator3.rb:94 (lambda)>>, state=:done, inputs=[#<Cell cell=2>, #<Cell cell=3>], output=#<Cell cell=5>>]
 10
 5
-[4, {:propagator=>{:propagator=>:multi, :run=>#<Proc:0x00007f3355dde228 ./propagator2.rb:82 (lambda)>}, :state=>:done, :inputs=>[{:cell=>10}, {:cell=>5}], :output=>{:cell=>50}}]
+[4, #<SimplePropagator propagator=#<PropFunc propagator=:multi, run=#<Proc:0x00007fe2521cde78 ./propagator3.rb:99 (lambda)>>, state=:done, inputs=[#<Cell cell=10>, #<Cell cell=5>], output=#<Cell cell=50>>]
 [true, true, true]
-[{:propagator=>{:func=>:add, :run=>#<Proc:0x00007f3355dde3b8 ./propagator2.rb:77 (lambda)>}, :state=>:done, :inputs=>[{:cell=>5}, {:cell=>5}], :output=>{:cell=>10}}, {:propagator=>{:func=>:add, :run=>#<Proc:0x00007f3355dde3b8 ./propagator2.rb:77 (lambda)>}, :state=>:done, :inputs=>[{:cell=>2}, {:cell=>3}], :output=>{:cell=>5}}, {:propagator=>{:propagator=>:multi, :run=>#<Proc:0x00007f3355dde228 ./propagator2.rb:82 (lambda)>}, :state=>:done, :inputs=>[{:cell=>10}, {:cell=>5}], :output=>{:cell=>50}}]
+[#<SimplePropagator propagator=#<PropFunc func=:add, run=#<Proc:0x00007fe2521ca778 ./propagator3.rb:94 (lambda)>>, state=:done, inputs=[#<Cell cell=5>, #<Cell cell=5>], output=#<Cell cell=10>>, #<SimplePropagator propagator=#<PropFunc func=:add, run=#<Proc:0x00007fe2521ca778 ./propagator3.rb:94 (lambda)>>, state=:done, inputs=[#<Cell cell=2>, #<Cell cell=3>], output=#<Cell cell=5>>, #<SimplePropagator propagator=#<PropFunc propagator=:multi, run=#<Proc:0x00007fe2521cde78 ./propagator3.rb:99 (lambda)>>, state=:done, inputs=[#<Cell cell=10>, #<Cell cell=5>], output=#<Cell cell=50>>]
 5
 10
 50
