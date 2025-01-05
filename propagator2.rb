@@ -27,22 +27,21 @@
 # computations in parallel.
 
 # Runs the propagator when applicable and returns true on completion
-def run_propagator p
-  return true if p[:state] == :done
-  p p
-  if p[:state] == :waiting
+def run_propagator prop
+  return true if prop[:state] == :done
+  if prop[:state] == :waiting
     # Check inputs
-    p[:inputs].each do | input |
+    prop[:inputs].each do | input |
       p input[:cell]
       return false if input[:cell] == :nothing
     end
-    p[:state] = :compute
+    prop[:state] = :compute
     false
   end
 
-  if p[:state] == :compute
-    p[:output][:cell] = p[:propagator][:run].call(p[:inputs],p[:output])
-    p[:state] = :done
+  if prop[:state] == :compute
+    prop[:output][:cell] = prop[:propagator][:run].call(prop[:inputs],prop[:output])
+    prop[:state] = :done
     return true
   end
   false
