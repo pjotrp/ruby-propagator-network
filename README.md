@@ -23,7 +23,7 @@ For a very minimalist implementation in Ruby, see the header of [propagator.rb](
 
 Other, a little more complicated, examples are:
 
-* In [ravanan](https://git.systemreboot.net/ravanan/tree/ravanan/propnet.scm) Arun implemented a propagator network on top of the common workflow language (CWL) to organize feeding SLURM/PBS jobs as they come in. To use ravanan with CWL you don't need to understand it. It just works (TM).
+* In [ravanan](https://git.systemreboot.net/ravanan/tree/ravanan/propnet.scm) Arun implemented a propagator network as a common workflow language (CWL) runner to organize SLURM/PBS jobs. To use ravanan with CWL you don't need to understand it. It just works (TM).
 * Dave Thompsom replaced Javascript's React with a propagator network that runs on web-assembly (WASM). It is a really nice [writeup](https://dthompson.us/posts/functional-reactive-user-interfaces-with-propagators.html).
 
 Thanks Arun for driving home the importance of propagator networks (propnets) at the Elixir Biohackathon 2024.
