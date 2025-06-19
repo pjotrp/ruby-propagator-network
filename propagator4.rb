@@ -91,7 +91,7 @@ def run_propagator prop, rerun_propnet, pn
 end
 
 def run_propnet pn
-  # Runs propnet once and then every time a propagator completes susing the call back method
+  # Runs propnet once and then every time a propagator completes by using the callback method
   pn.each do | propagator |
     run_propagator(propagator, method(:run_propnet), pn)
   end
