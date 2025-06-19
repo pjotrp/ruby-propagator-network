@@ -9,7 +9,7 @@ What if Unix pipes could:
 
 * Run in parallel on heterogeneous and mixed hardware
 * Allow for bidirectional communication
-* Allow for a run-graph rather than a linear path
+* Allow for a run-graph rather than a linear path, even though propagators are linear themselves
 * Deal with degeneration of results
 * Allow for improving on results coming from multiple directions
 * Track changes
@@ -21,6 +21,8 @@ that of Unix pipes.
 
 For a very minimalist implementation in Ruby, see the header of [propagator.rb](./propagator.rb).
 The next numbered files in that repo are using lambda in propagator2.rb and OpenStruct in propagator3.rb.
+propagator4.rb uses an on-demand callback 'scheduler' that is suitable for running external processes because the
+execution path is now linear.
 
 Other, a little more complicated, examples are:
 
