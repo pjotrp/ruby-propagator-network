@@ -73,7 +73,8 @@ end
 #
 def run_propagator prop, rerun_propnet, pn
   return if prop.state == :done
-  if prop.state == nil or prop.state == :waiting
+  prop.state = :waiting if !prop.state
+  if prop.state == :waiting
     # Check inputs
     prop.inputs.each do | input |
       p input.cell
