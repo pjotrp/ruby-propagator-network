@@ -119,6 +119,7 @@ a.cell = 2
 b.cell = 3
 d.cell = 5
 
+p propnet
 run_propnet(propnet)
 
 # Inspect results
