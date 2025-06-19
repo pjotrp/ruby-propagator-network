@@ -71,24 +71,21 @@ end
 #   :output output cell
 #
 def run_propagator prop, rerun_propnet, pn
-  return true if prop.state == :done
-  if prop.state == :waiting
+  return if prop.state == :done
+  if prop.state == nil or prop.state == :waiting
     # Check inputs
     prop.inputs.each do | input |
       p input.cell
-      return false if input.cell == :nothing
+      return if input.cell == :nothing
     end
     prop.state = :compute
-    false
   end
 
   if prop.state == :compute
     prop.output.cell = prop.propagator.run.call(prop.inputs,prop.output)
     prop.state = :done
     rerun_propnet.call(pn)
-    return true
   end
-  false
 end
 
 def run_propnet pn
@@ -110,11 +107,11 @@ f = Cell.new
 
 p_plus = PropFunc.new( :func => :add, :run => lambda { |inputs, output| output.cell = inputs[0].cell + inputs[1].cell } )
 
-propnet.append(SimplePropagator.new( :propagator => p_plus, :state => :waiting, :inputs => [c,d], :output => e ))
-propnet.append(SimplePropagator.new( :propagator => p_plus, :state => :waiting, :inputs => [a,b], :output => c ))
+propnet.append(SimplePropagator.new( :propagator => p_plus, :inputs => [c,d], :output => e ))
+propnet.append(SimplePropagator.new( :propagator => p_plus, :inputs => [a,b], :output => c ))
 
 p_multiply = PropFunc.new( :propagator => :multi, :run => lambda { |inputs, output| output.cell = inputs[0].cell * inputs[1].cell } )
-propnet.append(SimplePropagator.new( :propagator => p_multiply, :state => :waiting, :inputs => [e,d], :output => f ))
+propnet.append(SimplePropagator.new( :propagator => p_multiply, :inputs => [e,d], :output => f ))
 
 a.cell = 2
 b.cell = 3
