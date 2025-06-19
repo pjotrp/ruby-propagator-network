@@ -61,9 +61,10 @@ end
 class SimplePropagator < OpenStruct
 end
 
-# Runs the propagator when applicable and returns true on completion. It has inputs and an output.
-# The 'state' field tracks the compute state (:waiting, :compute, :done). The run fields holds the
-# lambda to execute and func holds the name of the function. So:
+# Runs the propagator when applicable and callbacks rerun_propnet on
+# completion. It has inputs and an output.  The 'state' field tracks
+# the compute state (:waiting, :compute, :done). The run fields holds
+# the lambda to execute and func holds the name of the function. So:
 #
 #   :func   function name
 #   :state  computation state (:waiting, :compute, :done)
