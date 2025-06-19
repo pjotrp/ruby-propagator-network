@@ -20,6 +20,7 @@ Say HI to 'propagator networks'. And even though the concept sounds complicated 
 that of Unix pipes.
 
 For a very minimalist implementation in Ruby, see the header of [propagator.rb](./propagator.rb).
+The next numbered files in that repo are using lambda in propagator2.rb and OpenStruct in propagator3.rb.
 
 Other, a little more complicated, examples are:
 
