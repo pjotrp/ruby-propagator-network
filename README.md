@@ -21,7 +21,7 @@ that of Unix pipes.
 
 For a very minimalist implementation in Ruby, see the header of [propagator.rb](./propagator.rb).
 The next numbered files in that repo are using lambda in propagator2.rb and OpenStruct in propagator3.rb.
-propagator4.rb uses an on-demand callback 'scheduler' that is efficient. propagator5.rb introduces an event
+propagator4.rb uses an on-demand callback 'scheduler' that is efficient. [propagator5](propagator5.rb) introduces an event
 handler with zeromq (0MQ) that runs propagators in parallel.
 
 Other, a little more complicated, examples are:
