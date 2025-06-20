@@ -47,6 +47,7 @@ require 'ffi-rzmq'
 require 'ostruct'
 
 ADDRESS = "ipc:///tmp/test"
+$pidlist = []
 
 def assure(rc)
   raise "Last API call failed at #{caller(1)}" unless rc >= 0
@@ -67,19 +68,18 @@ end
 
 # Runs the propagator when applicable and returns true on completion
 def run_propagator num, prop
-  return true if prop.state == :done
-  if prop.state == :waiting
+  return true if prop.state == :runnning or prop.state == :done
+  if prop.state == nil or prop.state == :waiting
     # Check inputs
     prop.inputs.each do | input |
-      p input.cell
+      # p input.cell
       return false if input.cell == :nothing
     end
-    prop.state = :compute
-    false
+    prop.state = :prepare_compute
   end
 
-  if prop.state == :compute
-    num += 1
+  if prop.state == :prepare_compute
+    prop.state = :running
     pid = fork do
       p [num, :client, ADDRESS]
       ctx = ZMQ::Context.new
@@ -92,20 +92,15 @@ def run_propagator num, prop
       p [:client_waiting]
       assure(s.recv_string(msg, 0))
       p [num, "opened", :client_received, msg]
-
-      (1..10).each do |i|
-        # while true
-        p [:client_send]
-        msg = ":progress"
-        assure(s.send_string(msg, ZMQ::SNDMORE))
-        assure(s.send_string((i*10).to_s,0))
-        msg = ''
-        p [:client_waiting]
-        assure(s.recv_string(msg, 0)) # later we can receive a message that interrupts the client
-        p [num, i*10, :client_received, msg]
-      end
-      msg = ":close"
-      s.send_string(msg, 0)
+      # in this forked process the inputs are available, but the
+      # output needs to be passed back with a pid to destroy the
+      # process. Note we assume the values are stringifiable ints.
+      # Propagators are indexed by num.
+      prop.output.cell = prop.propagator.run.call(prop.inputs,prop.output)
+      msg = ":done"
+      s.send_string(msg, ZMQ::SNDMORE)
+      s.send_string(num.to_s, ZMQ::SNDMORE)
+      s.send_string(prop.output.cell.to_s, 0)
       p [:client_waiting]
       assure(s.recv_string(msg, 0))
       p [num, :client_received, msg]
@@ -114,11 +109,7 @@ def run_propagator num, prop
       sleep 5 # prevent invalidating 0MQ queue on exit
     end
     Process.detach(pid)
-    # pidlist.push pid
-
-    prop.output.cell = prop.propagator.run.call(prop.inputs,prop.output)
-    prop.state = :done
-    return true
+    $pidlist.push pid
   end
   false
 end
@@ -131,21 +122,53 @@ def run_propnet pn
   rc  = s.setsockopt(ZMQ::SNDHWM, 100)
   rc  = s.setsockopt(ZMQ::RCVHWM, 100)
   assure(rc  = s.bind(ADDRESS))
+  # Fire up all propagators that are ready
+  p [:round_robin_propnet_bootstrap]
+  pn.each_with_index do | propagator, num |
+    # fire up propagators
+    run_propagator(num, propagator)
+  end
 
-  done = true
-  try = 100_000 # max runs
-  begin
-    result = []
-    # Try all propagators until they all return true
-    pn.each_with_index do | propagator, num |
-      try = try-1
-      result.push run_propagator(num, propagator)
+  # Run the event loop
+  while true
+    p [:server_waiting]
+    msg = ""
+    assure(s.recv_string msg)
+    p [:server_received, msg]
+    case msg
+    when ':hello'
+      assure(s.send_string "World", 0)
+    when ':progress'
+      msg = ""
+      assure(s.recv_string msg)
+      p [:progress, msg]
+      assure(s.send_string ":OK", 0)
+    when ':done'
+      assure(s.recv_string msg)
+      prop_num = msg.to_i
+      assure(s.recv_string msg)
+      result = msg.to_i
+      prop = pn[prop_num]
+      prop.output.cell = result
+      prop.state = :done
+      p [:prop_num,prop_num,:prop_output,result]
+      assure(s.send_string ":OK", 0)
+      pn[prop_num] = prop
+
+      # Fire up all propagators that are ready
+      p [:round_robin_propnet,prop_num]
+      pn.each_with_index do | propagator, num |
+        p [:num, num, :state, propagator.state, propagator]
+        # try to fire up propagator
+        run_propagator(num, propagator)
+      end
+
+    else
+      raise "Unknown client message"
     end
-    done = !result.index(false)
-  end until done or try <= 0
+  end
   s.close
   ctx.terminate
-
 end
 
 # Create the propnet. Note that the order of creating cells and propagators should not matter!
@@ -178,6 +201,13 @@ p c.cell
 p e.cell
 p f.cell
 
+$pidlist.each do |client_pid|
+  begin
+    Process.kill('HUP',client_pid)
+  rescue
+    p [client_pid, " pid already got killed"]
+  end
+end
 
 # p("Killing children")
 # pidlist.each do |pid|
