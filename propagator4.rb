@@ -17,6 +17,11 @@
 # propagator. This simplifies the 'scheduler' and produces less output
 # to boot!
 #
+# Despite the elegance of this solution it has one major flaw. For the
+# callback to work the propagator is blocking. So it won't work
+# properly in a parallel setup. For this we need a proper message
+# passing paradigm and an event loop.
+#
 # For the messaging setup it allows a propagator to run as long as it
 # is required --- only updating the network when it is done. This
 # allows for external processes to run.
