@@ -21,13 +21,15 @@ that of Unix pipes.
 
 For a very minimalist implementation in Ruby, see the header of [propagator.rb](./propagator.rb).
 The next numbered files in that repo are using lambda in propagator2.rb and OpenStruct in propagator3.rb.
-propagator4.rb uses an on-demand callback 'scheduler' that is suitable for running external processes because the
-execution path is now linear.
+propagator4.rb uses an on-demand callback 'scheduler' that is efficient. propagator5.rb introduces an event
+handler with zeromq (0MQ) that runs propagators in parallel.
 
 Other, a little more complicated, examples are:
 
 * In the [ravanan](https://git.systemreboot.net/ravanan/tree/ravanan/propnet.scm) CWL runner Arun uses a propagator network to organize CWL jobs on slurm/PBS.
-. To use ravanan with CWL you don't need to understand it. It just works (TM).
-  * Dave Thompsom replaced Javascript's React with a propagator network that runs on web-assembly (WASM). It is a really nice [writeup](https://dthompson.us/posts/functional-reactive-user-interfaces-with-propagators.html).
+* To use ravanan with CWL you don't need to understand it. It just works (TM).
+* Dave Thompsom replaced Javascript's React with a propagator network that runs on web-assembly (WASM). It is a really nice [writeup](https://dthompson.us/posts/functional-reactive-user-interfaces-with-propagators.html).
+
+Also you may want to read the 0MQ manual - online as a PDF. It has a lot of interesting information.
 
 Thanks Arun for driving home the importance of propagator networks (propnets) at the Elixir Biohackathon 2024.
