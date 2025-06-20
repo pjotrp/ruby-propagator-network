@@ -157,11 +157,14 @@ def run_propnet pn
 
       # Fire up all propagators that are ready
       p [:round_robin_propnet,prop_num]
+      still_running = false
       pn.each_with_index do | propagator, num |
         p [:num, num, :state, propagator.state, propagator]
         # try to fire up propagator
         run_propagator(num, propagator)
+        still_running = true if propagator.state != :done
       end
+      break if not still_running
 
     else
       raise "Unknown client message"
