@@ -11,11 +11,15 @@
 # network runs once and then every time a propagator finishes.
 #
 # In the previous example we used a callback method. That solution
-# was elegant, but flawed. Here we introduce an event handler.
+# was elegant, but flawed. Here we introduce an event handler that runs
+# propagators in parallel. Even in Ruby with fork copy-on-write(!)
 #
 # For the messaging setup it allows a propagator to run as long as it
 # is required --- only updating the network when it is done. This
 # allows for external processes to run.
+#
+# Note that 0MQ handles strings only (here) and we only deal with
+# integer result values, so a generic to_s -> to_i works.
 #
 # Note that this example misses out on logic programming style
 # resolution and lacks backtracking. Also it ignores incremental
@@ -70,15 +74,13 @@ end
 def run_propagator num, prop
   return true if prop.state == :runnning or prop.state == :done
   if prop.state == nil or prop.state == :waiting
-    # Check inputs
     prop.inputs.each do | input |
-      # p input.cell
       return false if input.cell == :nothing
     end
-    prop.state = :prepare_compute
+    prop.state = :prepare_for_compute
   end
 
-  if prop.state == :prepare_compute
+  if prop.state == :prepare_for_compute
     prop.state = :running
     pid = fork do
       p [num, :client, ADDRESS]
@@ -98,6 +100,7 @@ def run_propagator num, prop
       # Propagators are indexed by num.
       prop.output.cell = prop.propagator.run.call(prop.inputs,prop.output)
       msg = ":done"
+      # send a multi-part message
       s.send_string(msg, ZMQ::SNDMORE)
       s.send_string(num.to_s, ZMQ::SNDMORE)
       s.send_string(prop.output.cell.to_s, 0)
@@ -212,37 +215,59 @@ $pidlist.each do |client_pid|
   end
 end
 
-# p("Killing children")
-# pidlist.each do |pid|
-#   begin
-#     Process.kill('HUP',pid)
-#   rescue
-#     p [pid, "already got killed"]
-#   end
-# end
-
 =begin
 
 Resulting in:
 
 ./propagator3.rb
-:nothing
-[9, #<SimplePropagator propagator=#<PropFunc func=:add, run=#<Proc:0x00007fe2521ca778 ./propagator3.rb:94 (lambda)>>, state=:waiting, inputs=[#<Cell cell=:nothing>, #<Cell cell=5>], output=#<Cell cell=:nothing>>]
-2
-3
-[8, #<SimplePropagator propagator=#<PropFunc func=:add, run=#<Proc:0x00007fe2521ca778 ./propagator3.rb:94 (lambda)>>, state=:done, inputs=[#<Cell cell=2>, #<Cell cell=3>], output=#<Cell cell=5>>]
-:nothing
-[7, #<SimplePropagator propagator=#<PropFunc propagator=:multi, run=#<Proc:0x00007fe2521cde78 ./propagator3.rb:99 (lambda)>>, state=:waiting, inputs=[#<Cell cell=:nothing>, #<Cell cell=5>], output=#<Cell cell=:nothing>>]
-[false, true, false]
-5
-5
-[6, #<SimplePropagator propagator=#<PropFunc func=:add, run=#<Proc:0x00007fe2521ca778 ./propagator3.rb:94 (lambda)>>, state=:done, inputs=[#<Cell cell=5>, #<Cell cell=5>], output=#<Cell cell=10>>]
-[5, #<SimplePropagator propagator=#<PropFunc func=:add, run=#<Proc:0x00007fe2521ca778 ./propagator3.rb:94 (lambda)>>, state=:done, inputs=[#<Cell cell=2>, #<Cell cell=3>], output=#<Cell cell=5>>]
-10
-5
-[4, #<SimplePropagator propagator=#<PropFunc propagator=:multi, run=#<Proc:0x00007fe2521cde78 ./propagator3.rb:99 (lambda)>>, state=:done, inputs=[#<Cell cell=10>, #<Cell cell=5>], output=#<Cell cell=50>>]
-[true, true, true]
-[#<SimplePropagator propagator=#<PropFunc func=:add, run=#<Proc:0x00007fe2521ca778 ./propagator3.rb:94 (lambda)>>, state=:done, inputs=[#<Cell cell=5>, #<Cell cell=5>], output=#<Cell cell=10>>, #<SimplePropagator propagator=#<PropFunc func=:add, run=#<Proc:0x00007fe2521ca778 ./propagator3.rb:94 (lambda)>>, state=:done, inputs=[#<Cell cell=2>, #<Cell cell=3>], output=#<Cell cell=5>>, #<SimplePropagator propagator=#<PropFunc propagator=:multi, run=#<Proc:0x00007fe2521cde78 ./propagator3.rb:99 (lambda)>>, state=:done, inputs=[#<Cell cell=10>, #<Cell cell=5>], output=#<Cell cell=50>>]
+[:server, "ipc:///tmp/test"]
+[:round_robin_propnet_bootstrap]
+[:server_waiting]
+[1, :client, "ipc:///tmp/test"]
+[:client_send]
+[:client_waiting]
+[:server_received, ":hello"]
+[:server_waiting]
+[1, "opened", :client_received, "World"]
+[:client_waiting]
+[:server_received, ":done"]
+[:prop_num, 1, :prop_output, 5]
+[:round_robin_propnet, 1]
+[1, :client_received, ":OK"]
+[:num, 0, :state, :waiting, #<SimplePropagator propagator=#<PropFunc func=:add, run=#<Proc:0x00007f34d6a07dc0 propagator5.rb:190 (lambda)>>, state=:waiting, inputs=[#<Cell cell=5>, #<Cell cell=5>], output=#<Cell cell=:nothing>>]
+[0, :client, "ipc:///tmp/test"]
+[:num, 1, :state, :done, #<SimplePropagator propagator=#<PropFunc func=:add, run=#<Proc:0x00007f34d6a07dc0 propagator5.rb:190 (lambda)>>, state=:done, inputs=[#<Cell cell=2>, #<Cell cell=3>], output=#<Cell cell=5>>]
+[:num, 2, :state, :waiting, #<SimplePropagator propagator=#<PropFunc propagator=:multi, run=#<Proc:0x00007f34d69922c8 propagator5.rb:195 (lambda)>>, state=:waiting, inputs=[#<Cell cell=:nothing>, #<Cell cell=5>], output=#<Cell cell=:nothing>>]
+[:server_waiting]
+[:client_send]
+[:client_waiting]
+[:server_received, ":hello"]
+[:server_waiting]
+[0, "opened", :client_received, "World"]
+[:client_waiting]
+[:server_received, ":done"]
+[:prop_num, 0, :prop_output, 10]
+[:round_robin_propnet, 0]
+[0, :client_received, ":OK"]
+[:num, 0, :state, :done, #<SimplePropagator propagator=#<PropFunc func=:add, run=#<Proc:0x00007f34d6a07dc0 propagator5.rb:190 (lambda)>>, state=:done, inputs=[#<Cell cell=5>, #<Cell cell=5>], output=#<Cell cell=10>>]
+[:num, 1, :state, :done, #<SimplePropagator propagator=#<PropFunc func=:add, run=#<Proc:0x00007f34d6a07dc0 propagator5.rb:190 (lambda)>>, state=:done, inputs=[#<Cell cell=2>, #<Cell cell=3>], output=#<Cell cell=5>>]
+[:num, 2, :state, :waiting, #<SimplePropagator propagator=#<PropFunc propagator=:multi, run=#<Proc:0x00007f34d69922c8 propagator5.rb:195 (lambda)>>, state=:waiting, inputs=[#<Cell cell=10>, #<Cell cell=5>], output=#<Cell cell=:nothing>>]
+[:server_waiting]
+[2, :client, "ipc:///tmp/test"]
+[:client_send]
+[:client_waiting]
+[:server_received, ":hello"]
+[:server_waiting]
+[2, "opened", :client_received, "World"]
+[:client_waiting]
+[:server_received, ":done"]
+[:prop_num, 2, :prop_output, 50]
+[:round_robin_propnet, 2]
+[2, :client_received, ":OK"]
+[:num, 0, :state, :done, #<SimplePropagator propagator=#<PropFunc func=:add, run=#<Proc:0x00007f34d6a07dc0 propagator5.rb:190 (lambda)>>, state=:done, inputs=[#<Cell cell=5>, #<Cell cell=5>], output=#<Cell cell=10>>]
+[:num, 1, :state, :done, #<SimplePropagator propagator=#<PropFunc func=:add, run=#<Proc:0x00007f34d6a07dc0 propagator5.rb:190 (lambda)>>, state=:done, inputs=[#<Cell cell=2>, #<Cell cell=3>], output=#<Cell cell=5>>]
+[:num, 2, :state, :done, #<SimplePropagator propagator=#<PropFunc propagator=:multi, run=#<Proc:0x00007f34d69922c8 propagator5.rb:195 (lambda)>>, state=:done, inputs=[#<Cell cell=10>, #<Cell cell=5>], output=#<Cell cell=50>>]
+[#<SimplePropagator propagator=#<PropFunc func=:add, run=#<Proc:0x00007f34d6a07dc0 propagator5.rb:190 (lambda)>>, state=:done, inputs=[#<Cell cell=5>, #<Cell cell=5>], output=#<Cell cell=10>>, #<SimplePropagator propagator=#<PropFunc func=:add, run=#<Proc:0x00007f34d6a07dc0 propagator5.rb:190 (lambda)>>, state=:done, inputs=[#<Cell cell=2>, #<Cell cell=3>], output=#<Cell cell=5>>, #<SimplePropagator propagator=#<PropFunc propagator=:multi, run=#<Proc:0x00007f34d69922c8 propagator5.rb:195 (lambda)>>, state=:done, inputs=[#<Cell cell=10>, #<Cell cell=5>], output=#<Cell cell=50>>]
 5
 10
 50
