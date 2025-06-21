@@ -137,14 +137,14 @@ def run_propnet pn
     assure(s.recv_string msg)
     p [:server_received, msg]
     case msg
-    when ':hello'
+    when ':hello'    # just a client ping
       assure(s.send_string "World", 0)
-    when ':progress'
+    when ':progress' # the client can send progress updates
       msg = ""
       assure(s.recv_string msg)
       p [:progress, msg]
       assure(s.send_string ":OK", 0)
-    when ':done'
+    when ':done'     # when computation is done the client sends the result
       assure(s.recv_string msg)
       prop_num = msg.to_i
       assure(s.recv_string msg)
