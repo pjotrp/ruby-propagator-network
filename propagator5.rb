@@ -13,6 +13,8 @@
 # In the previous example we used a callback method. That solution
 # was elegant, but flawed. Here we introduce an event handler that runs
 # propagators in parallel. Even in Ruby with fork copy-on-write(!)
+# The event handler is still efficient - it only runs when a propagator
+# completes, similar to the callback version.
 #
 # For the messaging setup it allows a propagator to run as long as it
 # is required --- only updating the network when it is done. This
@@ -57,6 +59,9 @@ def assure(rc)
   raise "Last API call failed at #{caller(1)}" unless rc >= 0
 end
 
+# Cells contain data (state). We could use straight values in this
+# example, but this is the way propagators handle state - and you can
+# carry versioning, for example, in a cell.
 class Cell < OpenStruct
   def initialize
     super
@@ -139,7 +144,7 @@ def run_propnet pn
     case msg
     when ':hello'    # just a client ping
       assure(s.send_string "World", 0)
-    when ':progress' # the client can send progress updates
+    when ':progress' # the client can send progress updates, not used here
       msg = ""
       assure(s.recv_string msg)
       p [:progress, msg]
@@ -154,9 +159,8 @@ def run_propnet pn
       prop.state = :done
       p [:prop_num,prop_num,:prop_output,result]
       assure(s.send_string ":OK", 0)
-      pn[prop_num] = prop
 
-      # Fire up all propagators that are ready
+      # Fire up all propagators that are ready to run
       p [:round_robin_propnet,prop_num]
       still_running = false
       pn.each_with_index do | propagator, num |
