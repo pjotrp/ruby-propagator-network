@@ -51,7 +51,7 @@ require 'ffi-rzmq'
 require 'ostruct'
 
 ADDRESS = "ipc:///tmp/test"
-$pidlist = []
+$pidlist = [] # we use a global for tracking created processes
 
 def assure(rc)
   raise "Last API call failed at #{caller(1)}" unless rc >= 0
@@ -72,10 +72,10 @@ end
 
 # Runs the propagator when applicable and returns true on completion
 def run_propagator num, prop
-  return true if prop.state == :runnning or prop.state == :done
+  return if prop.state == :runnning or prop.state == :done
   if prop.state == nil or prop.state == :waiting
     prop.inputs.each do | input |
-      return false if input.cell == :nothing
+      return if input.cell == :nothing
     end
     prop.state = :prepare_for_compute
   end
@@ -95,15 +95,14 @@ def run_propagator num, prop
       assure(s.recv_string(msg, 0))
       p [num, "opened", :client_received, msg]
       # in this forked process the inputs are available, but the
-      # output needs to be passed back with a pid to destroy the
-      # process. Note we assume the values are stringifiable ints.
-      # Propagators are indexed by num.
+      # output needs to be passed back. Note we assume the values are
+      # stringifiable ints.  Propagators are indexed by num.
       prop.output.cell = prop.propagator.run.call(prop.inputs,prop.output)
       msg = ":done"
       # send a multi-part message
       s.send_string(msg, ZMQ::SNDMORE)
-      s.send_string(num.to_s, ZMQ::SNDMORE)
-      s.send_string(prop.output.cell.to_s, 0)
+      s.send_string(num.to_s, ZMQ::SNDMORE)   # propagator number
+      s.send_string(prop.output.cell.to_s, 0) # send computation result back
       p [:client_waiting]
       assure(s.recv_string(msg, 0))
       p [num, :client_received, msg]
@@ -114,7 +113,6 @@ def run_propagator num, prop
     Process.detach(pid)
     $pidlist.push pid
   end
-  false
 end
 
 def run_propnet pn
