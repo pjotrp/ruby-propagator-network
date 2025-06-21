@@ -40,7 +40,10 @@
 # done.  Note that it does not matter in what order we formulate the
 # computation and there there is no if-then logic for computation
 # paths. As state is contained in Cells it is perfectly viable to run
-# computations in parallel.
+# computations in parallel. In this example we use IPC, but we could
+# even have used TCP with the potential of running on different
+# machines.
+#
 # Run request handler
 #
 #   ruby propagator5.rb
@@ -69,13 +72,17 @@ class Cell < OpenStruct
   end
 end
 
+# A PropFunc holds a computation as a linear path
 class PropFunc < OpenStruct
 end
 
+# Propagators combine input Cells, a PropFunc, and an output Cell
 class SimplePropagator < OpenStruct
 end
 
-# Runs the propagator when applicable and returns true on completion
+# Runs the propagator when applicable. Note that the runner itself is
+# a linear path. It fires up a worker node that starts communicating
+# with the propnet listener event loop.
 def run_propagator num, prop
   return if prop.state == :runnning or prop.state == :done
   if prop.state == nil or prop.state == :waiting
@@ -120,6 +127,9 @@ def run_propagator num, prop
   end
 end
 
+# Runs the propnet on update only. Note that the runner itself is a
+# linear path in a single process. It ends when all propagators are
+# :done.
 def run_propnet pn
   # Run the propnet in a round robin fashion
   p [:server,ADDRESS]
