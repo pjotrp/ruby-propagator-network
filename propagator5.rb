@@ -189,11 +189,11 @@ f = Cell.new
 
 p_plus = PropFunc.new( :func => :add, :run => lambda { |inputs, output| output.cell = inputs[0].cell + inputs[1].cell } )
 
-propnet.append(SimplePropagator.new( :propagator => p_plus, :state => :waiting, :inputs => [c,d], :output => e ))
-propnet.append(SimplePropagator.new( :propagator => p_plus, :state => :waiting, :inputs => [a,b], :output => c ))
+propnet.append(SimplePropagator.new( :propagator => p_plus, :inputs => [c,d], :output => e ))
+propnet.append(SimplePropagator.new( :propagator => p_plus, :inputs => [a,b], :output => c ))
 
 p_multiply = PropFunc.new( :propagator => :multi, :run => lambda { |inputs, output| output.cell = inputs[0].cell * inputs[1].cell } )
-propnet.append(SimplePropagator.new( :propagator => p_multiply, :state => :waiting, :inputs => [e,d], :output => f ))
+propnet.append(SimplePropagator.new( :propagator => p_multiply, :inputs => [e,d], :output => f ))
 
 a.cell = 2
 b.cell = 3
@@ -271,5 +271,7 @@ Resulting in:
 5
 10
 50
+
+Note the order of propagator computation because of how the DAG is designed. 1 -> 0 -> 2.
 
 =end
