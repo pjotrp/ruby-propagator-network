@@ -45,6 +45,8 @@
 require 'ffi-rzmq'
 require 'ostruct'
 
+DO_TEST = false
+
 ADDRESS = "ipc:///tmp/test"
 $pidlist = [] # we use a global for tracking created processes
 
@@ -155,10 +157,10 @@ def run_propnet pn
       assure(s.recv_string msg)
       result = msg.to_i
       prop = pn[prop_num]
-      if prop.state != :done # don't overwrite completed cell
+      if prop.output.cell == :nothing # only add the first value
         prop.output.cell = result
-        prop.state = :done
       end
+      prop.state = :done
       p [:prop_num,prop_num,:prop_output,result]
       assure(s.send_string ":OK", 0)
 
@@ -191,12 +193,24 @@ d = Cell.new
 e = Cell.new
 f = Cell.new
 
+# Testing
+h1 = Cell.new
+h2 = Cell.new
+test_h = Cell.new
+
 p_plus     = PropFunc.new( :func => :add, :run => lambda { |inputs, output| output.cell = inputs[0].cell + inputs[1].cell } )
-p_plus_alt = PropFunc.new( :func => :add_alt, :run => lambda { |inputs, output| output.cell = inputs[0].cell + inputs[1].cell + 1} )
+p_plus_alt = PropFunc.new( :func => :add_alt, :run => lambda { |inputs, output| sleep 0.3 ; output.cell = inputs[0].cell + inputs[1].cell + 1} )
+p_plus_cmp = PropFunc.new( :func => :add_cmp, :run => lambda { |inputs, output| raise "Plus does not compare" if inputs[0].cell != inputs[1].cell } )
 
 # Run two routes to compute e, first one wins
 propnet.append(SimplePropagator.new( :propagator => p_plus, :inputs => [c,d], :output => e ))
 propnet.append(SimplePropagator.new( :propagator => p_plus_alt, :inputs => [c,d], :output => e ))
+# Add a test propagator that compares the outcomes of two propagators
+if DO_TEST
+  propnet.append(SimplePropagator.new( :propagator => p_plus, :inputs => [c,d], :output => h1 ))
+  propnet.append(SimplePropagator.new( :propagator => p_plus_alt, :inputs => [c,d], :output => h2 ))
+  propnet.append(SimplePropagator.new( :propagator => p_plus_cmp, :inputs => [h1,h2], :output => test_h ))
+end
 
 propnet.append(SimplePropagator.new( :propagator => p_plus, :inputs => [a,b], :output => c ))
 
@@ -225,61 +239,10 @@ end
 
 =begin
 
-Resulting in:
+This will result in an error that plus does not compare:
 
-./propagator3.rb
-[:server, "ipc:///tmp/test"]
-[:round_robin_propnet_bootstrap]
-[:server_waiting]
-[1, :client, "ipc:///tmp/test"]
-[:client_send]
-[:client_waiting]
-[:server_received, ":hello"]
-[:server_waiting]
-[1, "opened", :client_received, "World"]
-[:client_waiting]
-[:server_received, ":done"]
-[:prop_num, 1, :prop_output, 5]
-[:round_robin_propnet, 1]
-[1, :client_received, ":OK"]
-[:num, 0, :state, :waiting, #<SimplePropagator propagator=#<PropFunc func=:add, run=#<Proc:0x00007f34d6a07dc0 propagator5.rb:190 (lambda)>>, state=:waiting, inputs=[#<Cell cell=5>, #<Cell cell=5>], output=#<Cell cell=:nothing>>]
-[0, :client, "ipc:///tmp/test"]
-[:num, 1, :state, :done, #<SimplePropagator propagator=#<PropFunc func=:add, run=#<Proc:0x00007f34d6a07dc0 propagator5.rb:190 (lambda)>>, state=:done, inputs=[#<Cell cell=2>, #<Cell cell=3>], output=#<Cell cell=5>>]
-[:num, 2, :state, :waiting, #<SimplePropagator propagator=#<PropFunc propagator=:multi, run=#<Proc:0x00007f34d69922c8 propagator5.rb:195 (lambda)>>, state=:waiting, inputs=[#<Cell cell=:nothing>, #<Cell cell=5>], output=#<Cell cell=:nothing>>]
-[:server_waiting]
-[:client_send]
-[:client_waiting]
-[:server_received, ":hello"]
-[:server_waiting]
-[0, "opened", :client_received, "World"]
-[:client_waiting]
-[:server_received, ":done"]
-[:prop_num, 0, :prop_output, 10]
-[:round_robin_propnet, 0]
-[0, :client_received, ":OK"]
-[:num, 0, :state, :done, #<SimplePropagator propagator=#<PropFunc func=:add, run=#<Proc:0x00007f34d6a07dc0 propagator5.rb:190 (lambda)>>, state=:done, inputs=[#<Cell cell=5>, #<Cell cell=5>], output=#<Cell cell=10>>]
-[:num, 1, :state, :done, #<SimplePropagator propagator=#<PropFunc func=:add, run=#<Proc:0x00007f34d6a07dc0 propagator5.rb:190 (lambda)>>, state=:done, inputs=[#<Cell cell=2>, #<Cell cell=3>], output=#<Cell cell=5>>]
-[:num, 2, :state, :waiting, #<SimplePropagator propagator=#<PropFunc propagator=:multi, run=#<Proc:0x00007f34d69922c8 propagator5.rb:195 (lambda)>>, state=:waiting, inputs=[#<Cell cell=10>, #<Cell cell=5>], output=#<Cell cell=:nothing>>]
-[:server_waiting]
-[2, :client, "ipc:///tmp/test"]
-[:client_send]
-[:client_waiting]
-[:server_received, ":hello"]
-[:server_waiting]
-[2, "opened", :client_received, "World"]
-[:client_waiting]
-[:server_received, ":done"]
-[:prop_num, 2, :prop_output, 50]
-[:round_robin_propnet, 2]
-[2, :client_received, ":OK"]
-[:num, 0, :state, :done, #<SimplePropagator propagator=#<PropFunc func=:add, run=#<Proc:0x00007f34d6a07dc0 propagator5.rb:190 (lambda)>>, state=:done, inputs=[#<Cell cell=5>, #<Cell cell=5>], output=#<Cell cell=10>>]
-[:num, 1, :state, :done, #<SimplePropagator propagator=#<PropFunc func=:add, run=#<Proc:0x00007f34d6a07dc0 propagator5.rb:190 (lambda)>>, state=:done, inputs=[#<Cell cell=2>, #<Cell cell=3>], output=#<Cell cell=5>>]
-[:num, 2, :state, :done, #<SimplePropagator propagator=#<PropFunc propagator=:multi, run=#<Proc:0x00007f34d69922c8 propagator5.rb:195 (lambda)>>, state=:done, inputs=[#<Cell cell=10>, #<Cell cell=5>], output=#<Cell cell=50>>]
-[#<SimplePropagator propagator=#<PropFunc func=:add, run=#<Proc:0x00007f34d6a07dc0 propagator5.rb:190 (lambda)>>, state=:done, inputs=[#<Cell cell=5>, #<Cell cell=5>], output=#<Cell cell=10>>, #<SimplePropagator propagator=#<PropFunc func=:add, run=#<Proc:0x00007f34d6a07dc0 propagator5.rb:190 (lambda)>>, state=:done, inputs=[#<Cell cell=2>, #<Cell cell=3>], output=#<Cell cell=5>>, #<SimplePropagator propagator=#<PropFunc propagator=:multi, run=#<Proc:0x00007f34d69922c8 propagator5.rb:195 (lambda)>>, state=:done, inputs=[#<Cell cell=10>, #<Cell cell=5>], output=#<Cell cell=50>>]
-5
-10
-50
+propagator6.rb:201:in `block in <main>': Plus does not compare (RuntimeError)
 
-Note the order of propagator computation because of how the DAG is designed. 1 -> 0 -> 2.
+Disable the test function and you get two parallel outcomes (first one wins).
 
 =end
